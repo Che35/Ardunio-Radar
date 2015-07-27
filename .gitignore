@@ -1,0 +1,86 @@
+#include <Servo.h>
+Servo leftRightServo; // servoyu tanımlıyoruz
+int leftRightPos = 0; // servonun başlangıç konumu
+const int numReadings = 10; // okuma sayısı
+int index = 0; //Anlık okunan değerlerin indeksi
+int total = 0; // Toplanan okunan değerlerin indeksi
+int average = 0; // Ortalama
+int echoPin = 2; // sensörün echo pini
+int initPin = 3; // sensörün triger pini
+unsigned long pulseTime = 0; // sensör pulse süresi
+unsigned long distance = 0; // mesafe değişkeni
+ 
+/* pin ve port ayarları */
+void setup() {
+ 
+leftRightServo.attach(9);
+ 
+//sensör ayarları
+pinMode(initPin, OUTPUT);
+pinMode(echoPin, INPUT);
+ 
+// seri port
+ 
+Serial.begin(9600);
+ 
+}
+ 
+/* servo konum ve sensör okuma */
+void loop() {
+ 
+//servo soldan sağa git
+ 
+for(leftRightPos = 0; leftRightPos < 180; leftRightPos++) {
+ 
+leftRightServo.write(leftRightPos);
+ 
+for (index = 0; index<=numReadings;index++) {
+ 
+// sensör okuma
+digitalWrite(initPin,HIGH);
+delayMicroseconds(1000);
+digitalWrite(initPin,LOW);
+delayMicroseconds(50);
+// sinyali kapa
+pulseTime = pulseIn(echoPin, HIGH); // sinyali hesapla
+distance = pulseTime/58; // santimetreye çevir
+total = total + distance; // total değişkenini güncelle
+delay(10);
+}
+average = total/numReadings; // okunanlardan ortalama değişkenini ayarla
+ 
+if (index >= numReadings) {
+index = 0;
+total = 0;
+}
+Serial.print("X"); // processingin tanıması için önce X stringini gönder
+Serial.print(leftRightPos); // anlık servo açısı
+Serial.print("V"); // ikinci değer için V yolla
+Serial.println(average); // okunan ortalama sensör değeri
+}
+//servo sağdan sola git
+for(leftRightPos = 180; leftRightPos > 0; leftRightPos--) {
+leftRightServo.write(leftRightPos);
+for (index = 0; index<=numReadings;index++) {
+digitalWrite(initPin, LOW);
+delayMicroseconds(50);
+digitalWrite(initPin, HIGH);
+delayMicroseconds(50);
+digitalWrite(initPin, LOW);
+pulseTime = pulseIn(echoPin, HIGH);
+distance = pulseTime/58;
+total = total + distance;
+delay(10);
+}
+average = total/numReadings;
+ 
+if (index >= numReadings) {
+index = 0;
+total = 0;
+}
+Serial.print("X");
+Serial.print(leftRightPos);
+Serial.print("V");
+Serial.println(average);
+}
+}
